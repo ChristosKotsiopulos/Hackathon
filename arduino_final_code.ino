@@ -78,6 +78,13 @@ void loop() {
     return;
   }
 
+  // Poll for web app open requests (check every 2 seconds)
+  static unsigned long lastPoll = 0;
+  if (millis() - lastPoll > 2000) {
+    checkForOpenRequest();
+    lastPoll = millis();
+  }
+
   // Read user input from Serial Monitor (from your original code, but updated)
   if (Serial.available()) {
     char c = Serial.read();
@@ -108,6 +115,51 @@ void loop() {
   }
 
   delay(50);
+}
+
+// Check if web app requested box to open
+void checkForOpenRequest() {
+  String url = String(serverUrl) + "/api/arduino/check-open?boxId=" + boxId;
+  http.begin(client, url);
+
+  int httpResponseCode = http.GET();
+
+  if (httpResponseCode > 0) {
+    String response = http.getString();
+
+    // Check if should open
+    if (response.indexOf("\"shouldOpen\":true") > 0) {
+      Serial.println("Web app requested box open. Opening...");
+      openDoor();
+
+      // After opening, confirm to backend by calling pickup-request
+      // Extract pickup code from response if available, or use the one we got
+      int pickupCodeStart = response.indexOf("\"pickupCode\":\"");
+      if (pickupCodeStart > 0) {
+        pickupCodeStart += 14; // Length of "pickupCode":"
+        int pickupCodeEnd = response.indexOf("\"", pickupCodeStart);
+        if (pickupCodeEnd > pickupCodeStart) {
+          String code = response.substring(pickupCodeStart, pickupCodeEnd);
+          confirmPickup(code);
+        }
+      }
+    }
+  }
+
+  http.end();
+}
+
+// Confirm pickup to backend (marks card as picked_up)
+void confirmPickup(String code) {
+  String url = String(serverUrl) + "/api/pickup-request";
+  http.begin(client, url);
+  http.addHeader("Content-Type", "application/json");
+
+  String jsonPayload = "{\"pickupCode\":\"" + code + "\",\"boxId\":\"" + boxId + "\"}";
+  http.POST(jsonPayload);
+  http.end();
+
+  Serial.println("Pickup confirmed to backend.");
 }
 
 void checkCode() {

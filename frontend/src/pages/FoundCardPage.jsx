@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react';
 import './FoundCardPage.css';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 function FoundCardPage() {
   const [formData, setFormData] = useState({
     cardImage: null,
@@ -105,7 +107,7 @@ function FoundCardPage() {
         formDataToSend.append('manualRedId', formData.manualRedId);
       }
 
-      const response = await fetch('http://localhost:4000/api/found-card-photo', {
+      const response = await fetch(`${API_URL}/api/found-card-photo`, {
         method: 'POST',
         body: formDataToSend
       });
@@ -332,9 +334,6 @@ function FoundCardPage() {
             )}
             {result.boxId && (
               <p className="box-info"><strong>Box Location:</strong> {result.boxId}</p>
-            )}
-            {result.pickupCode && (
-              <p className="pickup-code"><strong>Pickup Code:</strong> {result.pickupCode}</p>
             )}
             {result.emailAddress ? (
               <p className="email-sent-info" style={result.emailSent ? {} : {color: '#e74c3c'}}>

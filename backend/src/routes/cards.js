@@ -300,13 +300,8 @@ router.post('/found-card-photo', upload.single('cardImage'), async(req, res) => 
             message += ' Your RedID is ' + redIdForMessage + '.';
         }
 
-        if (finalCard.boxId && finalCard.pickupCode) {
-            message +=
-                ' The card is stored at ' +
-                finalCard.boxId +
-                '. Pickup code: ' +
-                finalCard.pickupCode +
-                '.';
+        if (finalCard.boxId) {
+            message += ' The card is stored at ' + finalCard.boxId + '.';
         }
 
         message += ' Your reference ID is ' + referenceCode + '.';
@@ -341,7 +336,7 @@ router.post('/found-card-photo', upload.single('cardImage'), async(req, res) => 
             referenceCode: referenceCode,
             message: message,
             boxId: finalCard.boxId || null,
-            pickupCode: finalCard.pickupCode || null,
+            // pickupCode removed from response - only sent in email
             redId: redIdForMessage || finalCard.redId || null,
             extractedInfo: extractedInfo || null,
             emailSent: emailSentValue,
@@ -466,6 +461,49 @@ router.post('/found-card-redid', async(req, res) => {
 });
 
 /**
+ * GET /api/arduino/check-open
+ * Arduino polls this endpoint to check if it should open the box
+ * Returns the pickup code if there's a pending open request
+ */
+router.get('/arduino/check-open', (req, res) => {
+    try {
+        const { boxId } = req.query;
+
+        if (!boxId) {
+            return res.status(400).json({ error: 'boxId is required' });
+        }
+
+        // Find cards with pending open requests for this box
+        const cards = getAllCards();
+        const pendingCard = cards.find(card =>
+            card.boxId === boxId &&
+            card.openRequestedAt &&
+            card.status !== 'picked_up' &&
+            // Only return if request is recent (within last 30 seconds)
+            (new Date() - new Date(card.openRequestedAt)) < 30000
+        );
+
+        if (pendingCard) {
+            // Clear the openRequestedAt flag so it doesn't trigger again
+            updateCard(pendingCard.id, {
+                openRequestedAt: null
+            });
+            return res.json({
+                shouldOpen: true,
+                pickupCode: pendingCard.pickupCode
+            });
+        }
+
+        return res.json({
+            shouldOpen: false
+        });
+    } catch (error) {
+        console.error('Error checking open request:', error);
+        return res.status(500).json({ error: 'Failed to check open request' });
+    }
+});
+
+/**
  * POST /api/pickup-request
  * Used by box and app when someone wants to claim the card
  */
@@ -487,16 +525,35 @@ router.post('/pickup-request', async(req, res) => {
             return res.json({ ok: false, reason: 'already_picked_up' });
         }
 
-        updateCard(card.id, {
-            status: 'picked_up',
-            pickedUpAt: new Date()
-        });
+        // Check if this is a web app request (has 'user-agent' with Mozilla)
+        const isWebApp = req.headers['user-agent'] && req.headers['user-agent'].includes('Mozilla');
 
-        return res.json({
-            ok: true,
-            message: 'Card has been taken out successfully',
-            cardId: card.id
-        });
+        if (isWebApp) {
+            // Web app request - set openRequestedAt so Arduino can poll and open
+            // Don't mark as picked_up yet - Arduino will confirm after opening
+            updateCard(card.id, {
+                openRequestedAt: new Date()
+            });
+            console.log(`[Route] Web app requested box open for pickup code ${pickupCode} in ${boxId}`);
+            return res.json({
+                ok: true,
+                message: 'Pickup code verified. Box will open shortly.',
+                cardId: card.id,
+                boxWillOpen: true // Indicate to web app that Arduino should open
+            });
+        } else {
+            // Arduino request - mark as picked up (Arduino already opened the box)
+            updateCard(card.id, {
+                status: 'picked_up',
+                pickedUpAt: new Date(),
+                openRequestedAt: null // Clear the flag
+            });
+            return res.json({
+                ok: true,
+                message: 'Card has been taken out successfully',
+                cardId: card.id
+            });
+        }
     } catch (error) {
         console.error('Error processing pickup request:', error);
         return res.status(500).json({ error: 'Failed to process pickup request' });

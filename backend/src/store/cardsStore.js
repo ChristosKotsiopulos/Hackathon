@@ -30,6 +30,7 @@ export function createCard(cardData) {
         pickupCode: cardData.pickupCode || null,
         status: cardData.status || 'waiting_for_email',
         createdAt: new Date(),
+        openRequestedAt: null, // Timestamp when web app requests box to open
         ...cardData
     };
 

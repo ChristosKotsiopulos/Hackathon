@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import './AdminPage.css';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -32,12 +34,12 @@ function AdminPage() {
   const fetchCards = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:4000/api/cards?status=waiting_for_email');
-      
+      const response = await fetch(`${API_URL}/api/cards?status=waiting_for_email`);
+
       if (!response.ok) {
         throw new Error('Failed to fetch cards');
       }
-      
+
       const data = await response.json();
       setCards(data);
     } catch (err) {
@@ -64,7 +66,7 @@ function AdminPage() {
       setSendingEmail(cardId);
       setError(null);
 
-      const response = await fetch(`http://localhost:4000/api/cards/${cardId}/set-email`, {
+      const response = await fetch(`${API_URL}/api/cards/${cardId}/set-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,14 +80,14 @@ function AdminPage() {
       }
 
       const data = await response.json();
-      
+
       // Refresh the list
       await fetchCards();
-      
+
       // Reset form
       setEditingCardId(null);
       setEmailInput('');
-      
+
       alert(`Email sent successfully to ${data.card.email}!`);
     } catch (err) {
       setError(err.message || 'Failed to set email and send notification');
@@ -157,8 +159,8 @@ function AdminPage() {
             Cards waiting for email lookup. Manually look up each student's email in MySDSU, then enter it here to send the notification.
           </p>
         </div>
-        <button 
-          onClick={() => setIsAuthenticated(false)} 
+        <button
+          onClick={() => setIsAuthenticated(false)}
           className="logout-button"
         >
           Logout
@@ -188,13 +190,13 @@ function AdminPage() {
           {cards.map((card) => {
             const statusDisplay = getStatusDisplay(card.status);
             const isEditing = editingCardId === card.id;
-            
+
             return (
               <div key={card.id} className="card-item">
                 <div className="card-header">
                   <div className="card-id-small">ID: {card.id.substring(0, 8).toUpperCase()}</div>
-                  <span 
-                    className="status-badge" 
+                  <span
+                    className="status-badge"
                     style={{ backgroundColor: statusDisplay.color }}
                   >
                     {statusDisplay.text}
