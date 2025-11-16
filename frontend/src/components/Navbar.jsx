@@ -13,7 +13,7 @@ function Navbar() {
             I found a card
           </Link>
           <Link to="/status" className="navbar-link">
-            Check card status
+            Retrieve card
           </Link>
           <Link to="/admin" className="navbar-link">
             Admin

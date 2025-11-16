@@ -57,9 +57,9 @@ function LostCardStatusPage() {
 
   return (
     <div className="lost-card-status-page">
-      <h1>Check Card Status</h1>
+      <h1>Retrieve Card</h1>
       <p className="page-description">
-        Enter your reference code to check the status of your lost card.
+        Enter your reference code to retrieve your lost card.
       </p>
 
       <form onSubmit={handleSubmit} className="status-form">
@@ -83,7 +83,7 @@ function LostCardStatusPage() {
           </p>
         </div>
         <button type="submit" className="submit-button" disabled={loading}>
-          {loading ? 'Checking...' : 'Check Status'}
+          {loading ? 'Retrieving...' : 'Retrieve Card'}
         </button>
       </form>
 
