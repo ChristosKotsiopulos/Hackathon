@@ -28,6 +28,13 @@ const String boxId = "BOX_1";  // Your box identifier
 // Code entry
 String inputCode = "";
 
+// Store valid pickup codes received from backend
+String validCodes[20];  // Store up to 20 codes
+int codeCount = 0;
+
+// Serial input buffer for receiving codes from backend
+String serialBuffer = "";
+
 WiFiClient client;
 HTTPClient http;
 
@@ -85,12 +92,46 @@ void loop() {
     lastPoll = millis();
   }
 
-  // Read user input from Serial Monitor (from your original code, but updated)
-  if (Serial.available()) {
+  // Check for incoming serial data from backend (CODE:1234:BOX_1 format)
+  if (Serial.available() > 0) {
     char c = Serial.read();
-
-    // Only accept digits 1, 2, 3, 4
-    if (c >= '1' && c <= '4') {
+    
+    // Check if this is a message from backend (starts with "CODE:")
+    if (c == 'C' || serialBuffer.length() > 0) {
+      serialBuffer += c;
+      
+      // Check if we have a complete line
+      if (c == '\n' || c == '\r') {
+        serialBuffer.trim();
+        
+        // Parse format: "CODE:1234:BOX_1"
+        if (serialBuffer.startsWith("CODE:")) {
+          int codeStart = 5; // After "CODE:"
+          int codeEnd = serialBuffer.indexOf(':', codeStart);
+          
+          if (codeEnd > codeStart) {
+            String pickupCode = serialBuffer.substring(codeStart, codeEnd);
+            String receivedBoxId = serialBuffer.substring(codeEnd + 1);
+            
+            // Only store if it's for this box
+            if (receivedBoxId == boxId) {
+              addValidCode(pickupCode);
+              Serial.print("✅ Received code from backend: ");
+              Serial.println(pickupCode);
+            }
+          }
+        }
+        
+        serialBuffer = "";
+      }
+      
+      // Reset if buffer gets too long (not a CODE message)
+      if (serialBuffer.length() > 50) {
+        serialBuffer = "";
+      }
+    }
+    // Otherwise, treat as user input (digits 1-4)
+    else if (c >= '1' && c <= '4') {
       if (inputCode.length() < 4) {
         inputCode += c;
         Serial.print(c);  // Show the digit
@@ -162,9 +203,44 @@ void confirmPickup(String code) {
   Serial.println("Pickup confirmed to backend.");
 }
 
+// Add a valid code to the stored list
+void addValidCode(String code) {
+  // Check if code already exists
+  for (int i = 0; i < codeCount; i++) {
+    if (validCodes[i] == code) {
+      return; // Already stored
+    }
+  }
+  
+  // Add to list if there's space
+  if (codeCount < 20) {
+    validCodes[codeCount] = code;
+    codeCount++;
+    Serial.print("📦 Stored code: ");
+    Serial.println(code);
+    Serial.print("Total codes: ");
+    Serial.println(codeCount);
+  } else {
+    Serial.println("⚠️ Code storage full!");
+  }
+}
+
+// Check if a code is valid (both in stored list and via backend)
 void checkCode() {
   Serial.print("Verifying code: ");
   Serial.println(inputCode);
+  
+  // First check if code is in stored list (fast check)
+  bool foundInList = false;
+  for (int i = 0; i < codeCount; i++) {
+    if (validCodes[i] == inputCode) {
+      foundInList = true;
+      Serial.println("✅ Code found in stored list!");
+      break;
+    }
+  }
+  
+  // Also verify with backend (for security and status update)
   Serial.print("Connecting to server... ");
 
   // Connect to backend API
@@ -187,18 +263,28 @@ void checkCode() {
 
     // Check if code is valid
     if (httpResponseCode == 200 && response.indexOf("\"ok\":true") > 0) {
-      Serial.println("Code accepted. Opening...");
+      Serial.println("✅ Code verified by backend. Opening...");
       openDoor();
     } else {
-      Serial.println("Incorrect code.");
+      if (foundInList) {
+        Serial.println("⚠️ Code in list but backend rejected. Not opening.");
+      } else {
+        Serial.println("❌ Incorrect code.");
+      }
     }
   } else {
-    Serial.print("Connection failed. Error: ");
-    Serial.println(httpResponseCode);
-    Serial.println("Check:");
-    Serial.println("  1. Backend server is running");
-    Serial.println("  2. IP address is correct: " + String(serverUrl));
-    Serial.println("  3. Arduino and computer on same WiFi");
+    // If backend is unreachable but code is in list, allow it (offline mode)
+    if (foundInList) {
+      Serial.println("⚠️ Backend unreachable, but code is valid. Opening...");
+      openDoor();
+    } else {
+      Serial.print("❌ Connection failed. Error: ");
+      Serial.println(httpResponseCode);
+      Serial.println("Check:");
+      Serial.println("  1. Backend server is running");
+      Serial.println("  2. IP address is correct: " + String(serverUrl));
+      Serial.println("  3. Arduino and computer on same WiFi");
+    }
   }
 
   http.end();
