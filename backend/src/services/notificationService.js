@@ -108,7 +108,7 @@ PICKUP CODE: ${card.pickupCode}
 
 Please go to ${card.boxId} and enter the pickup code ${card.pickupCode} to retrieve your card.
 
-${card.locationDescription ? `Found at: ${card.locationDescription}` : ''}
+${card.locationDescription ? `Drop-off Location: ${card.locationDescription}` : ''}
 
 You can check your card status anytime using your reference code: ${referenceCode}
 
@@ -140,17 +140,17 @@ Clumsy Aztecs
     <div class="content">
       <p>Hello ${ownerName},</p>
       <p>Great news! Your SDSU ID card has been found and is ready for pickup.</p>
-      
+
       <p><strong>Reference Code:</strong></p>
       <div class="ref-code-box">${referenceCode}</div>
       <p style="font-size: 13px; color: #666; margin-top: -10px;">Use this code to check your card status anytime</p>
-      
+
       <p><strong>Pickup Location:</strong> ${card.boxId}</p>
       <div class="code-box">${card.pickupCode}</div>
       <p>Please go to <strong>${card.boxId}</strong> and enter the pickup code above to retrieve your card.</p>
-      
-      ${card.locationDescription ? `<p><strong>Found at:</strong> ${card.locationDescription}</p>` : ''}
-      
+
+      ${card.locationDescription ? `<p><strong>Drop-off Location:</strong> ${card.locationDescription}</p>` : ''}
+
       <p>If you have any questions, please contact us.</p>
     </div>
     <div class="footer">
@@ -172,7 +172,7 @@ REFERENCE CODE: ${referenceCode}
 The person who found your card has provided contact information:
 ${card.finderContact}
 
-${card.locationDescription ? `Found at: ${card.locationDescription}` : ''}
+${card.locationDescription ? `Drop-off Location: ${card.locationDescription}` : ''}
 
 Please contact them to arrange pickup of your card.
 
@@ -204,18 +204,18 @@ Clumsy Aztecs
     <div class="content">
       <p>Hello ${ownerName},</p>
       <p>Your SDSU ID card has been found!</p>
-      
+
       <p><strong>Reference Code:</strong></p>
       <div class="ref-code-box">${referenceCode}</div>
       <p style="font-size: 13px; color: #666; margin-top: -10px;">Use this code to check your card status anytime</p>
-      
+
       <div class="contact-box">
         <p><strong>Contact the finder:</strong></p>
         <p>${card.finderContact}</p>
       </div>
-      
-      ${card.locationDescription ? `<p><strong>Found at:</strong> ${card.locationDescription}</p>` : ''}
-      
+
+      ${card.locationDescription ? `<p><strong>Drop-off Location:</strong> ${card.locationDescription}</p>` : ''}
+
       <p>Please contact them to arrange pickup of your card.</p>
     </div>
     <div class="footer">
@@ -234,7 +234,7 @@ Your SDSU ID card has been found!
 
 REFERENCE CODE: ${referenceCode}
 
-${card.locationDescription ? `Found at: ${card.locationDescription}` : 'Location information not provided.'}
+${card.locationDescription ? `Drop-off Location: ${card.locationDescription}` : 'Drop-off location information not provided.'}
 
 Please check Clumsy Aztecs for more details: http://localhost:5173/status
 
@@ -264,13 +264,13 @@ Clumsy Aztecs
     <div class="content">
       <p>Hello ${ownerName},</p>
       <p>Your SDSU ID card has been found!</p>
-      
+
       <p><strong>Reference Code:</strong></p>
       <div class="ref-code-box">${referenceCode}</div>
       <p style="font-size: 13px; color: #666; margin-top: -10px;">Use this code to check your card status anytime</p>
-      
-      ${card.locationDescription ? `<p><strong>Found at:</strong> ${card.locationDescription}</p>` : '<p>Location information not provided.</p>'}
-      
+
+      ${card.locationDescription ? `<p><strong>Drop-off Location:</strong> ${card.locationDescription}</p>` : '<p>Drop-off location information not provided.</p>'}
+
       <p>Please check <a href="http://localhost:5173/status">Clumsy Aztecs</a> for more details.</p>
     </div>
     <div class="footer">

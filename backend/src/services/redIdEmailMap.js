@@ -8,7 +8,7 @@
 const redIdEmailMap = {
     '132264610': 'ajasti7720@sdsu.edu',
     '132274230': 'ckotsiopulos5746@sdsu.edu',
-    '132264610': 'ajasti7720@sdsu.edu',
+    '131740957': 'ngaribi3916sdsu.edu',
     '132264610': 'ajasti7720@sdsu.edu',
 };
 

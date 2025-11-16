@@ -2,25 +2,48 @@
   "editor.formatOnSave": false,
   "editor.formatOnPaste": false,
   "editor.formatOnType": false,
+
   "javascript.format.enable": false,
   "typescript.format.enable": false,
+  "javascript.preferences.quoteStyle": "single",
+  "typescript.preferences.quoteStyle": "single",
+
+  "editor.codeActionsOnSave": {
+    "source.fixAll": false,
+    "source.fixAll.eslint": false,
+    "source.organizeImports": false
+  },
+
+  "eslint.enable": false,
+  "prettier.enable": false,
+
   "[javascript]": {
     "editor.formatOnSave": false,
     "editor.formatOnPaste": false,
     "editor.formatOnType": false,
     "editor.defaultFormatter": null,
-    "editor.codeActionsOnSave": {}
+    "editor.codeActionsOnSave": {
+      "source.fixAll": false,
+      "source.fixAll.eslint": false
+    }
   },
+
   "[typescript]": {
     "editor.formatOnSave": false,
     "editor.formatOnPaste": false,
     "editor.formatOnType": false,
     "editor.defaultFormatter": null,
-    "editor.codeActionsOnSave": {}
+    "editor.codeActionsOnSave": {
+      "source.fixAll": false,
+      "source.fixAll.eslint": false
+    }
   },
-  "files.associations": {
-    "**/cards.js": "javascript"
+
+  "[json]": {
+    "editor.formatOnSave": false
   },
-  "javascript.preferences.quoteStyle": "single",
-  "typescript.preferences.quoteStyle": "single"
+
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true
 }

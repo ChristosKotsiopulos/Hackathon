@@ -1,7 +1,0 @@
-# Ignore all files from Prettier formatting
-**/*
-
-# Specifically ignore cards.js to prevent any formatting
-src/routes/cards.js
-**/cards.js
-
