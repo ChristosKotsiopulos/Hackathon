@@ -13,10 +13,11 @@ let serialPort = null;
 let isPortOpen = false;
 
 // Common Arduino serial port paths (will try to auto-detect)
+// Note: On macOS, use 'cu.' for outgoing serial connections (not 'tty.')
 const commonPorts = [
+    '/dev/cu.usbmodem101',  // macOS - Your Arduino (found via port scanner)
+    '/dev/cu.usbserial-110', // macOS - Alternative port
     '/dev/cu.usbmodem110',  // macOS (Arduino 110)
-    '/dev/cu.usbserial-110', // macOS (alternative)
-    '/dev/cu.usbmodem101',  // macOS
     '/dev/cu.usbmodem1101', // macOS
     '/dev/ttyUSB0',         // Linux
     '/dev/ttyACM0',         // Linux
@@ -103,12 +104,20 @@ async function findArduinoPort() {
         const ports = await SerialPort.list();
 
         // Look for USB modem ports (Arduino typically shows up as usbmodem)
+        // Prefer ports with Arduino manufacturer, then usbmodem, then usbserial
         const arduinoPort = ports.find(port => {
+            const hasArduinoManufacturer = port.manufacturer && port.manufacturer.toLowerCase().includes('arduino');
             const hasUsbModem = port.path.includes('usbmodem');
             const hasUsbSerial = port.path.includes('usbserial');
-            const hasArduinoManufacturer = port.manufacturer && port.manufacturer.toLowerCase().includes('arduino');
-            return hasUsbModem || hasUsbSerial || hasArduinoManufacturer;
+            return hasArduinoManufacturer || hasUsbModem || hasUsbSerial;
         });
+        
+        // If found, convert tty. to cu. for macOS (cu. is for outgoing connections)
+        if (arduinoPort && arduinoPort.path.startsWith('/dev/tty.')) {
+            const cuPath = arduinoPort.path.replace('/dev/tty.', '/dev/cu.');
+            console.log(`[Arduino] 🔄 Converting tty. to cu.: ${arduinoPort.path} → ${cuPath}`);
+            return cuPath;
+        }
 
         if (arduinoPort) {
             console.log(`[Arduino] 🔍 Auto-detected port: ${arduinoPort.path}`);
